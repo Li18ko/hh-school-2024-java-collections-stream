@@ -1,14 +1,9 @@
 package tasks;
 
 import common.Person;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -26,64 +21,46 @@ public class Task9 {
   // Костыль, эластик всегда выдает в топе "фальшивую персону".
   // Конвертируем начиная со второй
   public List<String> getNames(List<Person> persons) {
-    if (persons.size() == 0) {
+    //заменю persons.size() == 0 на persons.isEmpty(), persons.isEmpty() быстрее проверяет List
+    if (persons.isEmpty()) {
       return Collections.emptyList();
     }
-    persons.remove(0);
-    return persons.stream().map(Person::firstName).collect(Collectors.toList());
+    //вместо удаления нулевого элемента, взяла верезку List с помощью subList (так быстрее)
+    return persons.subList(1, persons.size()).stream().map(Person::firstName).collect(Collectors.toList());
   }
 
   // Зачем-то нужны различные имена этих же персон (без учета фальшивой разумеется)
   public Set<String> getDifferentNames(List<Person> persons) {
-    return getNames(persons).stream().distinct().collect(Collectors.toSet());
+    //Создание HashSet<>, который поддерживает уникальность, вместо использования distinct
+    return new HashSet<>(getNames(persons));
   }
 
   // Тут фронтовая логика, делаем за них работу - склеиваем ФИО
   public String convertPersonToString(Person person) {
-    String result = "";
-    if (person.secondName() != null) {
-      result += person.secondName();
-    }
-
-    if (person.firstName() != null) {
-      result += " " + person.firstName();
-    }
-
-    if (person.secondName() != null) {
-      result += " " + person.secondName();
-    }
-    return result;
+      // Убрала склейку строк через кучу if, вместо это использовала joing с фильтрацией != null
+      return Stream.of(person.secondName(), person.firstName(), person.middleName())
+            .filter(Objects::nonNull).collect(Collectors.joining(" "));
   }
 
   // словарь id персоны -> ее имя
   public Map<Integer, String> getPersonNames(Collection<Person> persons) {
-    Map<Integer, String> map = new HashMap<>(1);
-    for (Person person : persons) {
-      if (!map.containsKey(person.id())) {
-        map.put(person.id(), convertPersonToString(person));
-      }
-    }
+    //вместо for использую более краткую запись stream api
+    Map<Integer, String> map = persons.stream().collect(Collectors.toMap(
+            //игнорирую дубликаты
+            Person::id, this::convertPersonToString, (existing, replacement) -> existing));
     return map;
   }
 
   // есть ли совпадающие в двух коллекциях персоны?
   public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-    boolean has = false;
-    for (Person person1 : persons1) {
-      for (Person person2 : persons2) {
-        if (person1.equals(person2)) {
-          has = true;
-        }
-      }
-    }
-    return has;
+    //Вместо for в for использую Stream Api для проверки есть хотя бы один совпадающий элемент
+    return persons1.stream().anyMatch(person1 -> persons2.stream().anyMatch(persons1::equals));
   }
 
   // Посчитать число четных чисел
   public long countEven(Stream<Integer> numbers) {
-    count = 0;
-    numbers.filter(num -> num % 2 == 0).forEach(num -> count++);
-    return count;
+    //Использую сразу метод count вместо forEach
+    return numbers.filter(num -> num % 2 == 0).count();
   }
 
   // Загадка - объясните почему assert тут всегда верен
@@ -93,6 +70,7 @@ public class Task9 {
     List<Integer> snapshot = new ArrayList<>(integers);
     Collections.shuffle(integers);
     Set<Integer> set = new HashSet<>(integers);
+    //В HashSet<> toString() всегда возвращает отсортированный вариант
     assert snapshot.toString().equals(set.toString());
   }
 }

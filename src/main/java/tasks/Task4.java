@@ -4,6 +4,7 @@ import common.ApiPersonDto;
 import common.Person;
 import common.PersonConverter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /*
@@ -22,6 +23,6 @@ public class Task4 {
   }
 
   public List<ApiPersonDto> convert(List<Person> persons) {
-    return new ArrayList<>();
+    return persons.stream().map(personConverter::convert).toList();
   }
 }
