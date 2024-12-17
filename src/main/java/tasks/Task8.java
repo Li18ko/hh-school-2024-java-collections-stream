@@ -24,12 +24,18 @@ public class Task8 {
 
   public Set<PersonWithResumes> enrichPersonsWithResumes(Collection<Person> persons) {
     Set<Resume> resumes = personService.findResumes(persons.stream()
-            .map(Person::id).collect(Collectors.toSet()));
+            .map(Person::id)
+            .collect(Collectors.toSet()));
 
     Map<Integer, Set<Resume>> personResumesMap = resumes.stream()
-            .collect(Collectors.groupingBy(Resume::personId, Collectors.toSet()));
+            .collect(Collectors.groupingBy(
+                    Resume::personId,
+                    Collectors.toSet()
+            ));
 
-    return persons.stream().map(person -> new PersonWithResumes(person,
-                    personResumesMap.getOrDefault(person.id(), Set.of()))).collect(Collectors.toSet());
+    return persons.stream().map(person ->
+                    new PersonWithResumes(person, personResumesMap.getOrDefault(person.id(), Set.of()))
+            )
+            .collect(Collectors.toSet());
   }
 }
